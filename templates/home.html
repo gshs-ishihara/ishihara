@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="text-center my-2">
+                <h1>색각 이상 테스트</h1>
+                <p class="lead">Discover your color vision</p>
+            </div>
+        </div>
+        {% if messages %}
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <div class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            {% for message in messages %}
+                                <p class="mb-0">{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row justify-content-center">
+            <div class="col-md-4 text-center mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">간편 검사</h5>
+                        <p class="card-text">13문항으로 구성된 간편 검사</p>
+                        <form method="post" action="{% url 'test' 'short' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">간편 검사 시작</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 text-center mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">정밀 검사</h5>
+                        <p class="card-text">25문항으로 구성된 정밀 검사</p>
+                        <form method="post" action="{% url 'test' 'long' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">정밀 검사 시작</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 justify-content-center">
+            <div class="col-md-8">
+                <img src="{% static 'images/poster.png' %}" class="img-fluid" alt="Poster">
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl)
+            });
+            toastList.forEach(toast => toast.show());
+        });
+    </script>
+{% endblock %}

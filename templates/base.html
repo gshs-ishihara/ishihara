@@ -1,0 +1,136 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ko" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="ishihara-test.azurewebsites.net">
+    <meta property="og:title" content="Ishihara Test">
+    <meta property="og:image" content="https://ishihara-test.azurewebsites.net/static/images/opengraph.png">
+    <meta property="og:description" content="색약·색맹 검사하고 기프티콘 받자!">
+    <title>{% block title %}Ishihara Test{% endblock %}</title>
+
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          integrity="sha256-MBffSnbbXwHCuZtgPYiwMQbfE7z+GOZ7fBPCNB06Z98=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css"
+          integrity="sha256-6MNujrdbV0Z7S927PzUMXOmMLwkKdsdD7XIl/w89HMQ=" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+    {% block css %}
+    {% endblock %}
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <header class="bg-body-tertiary py-3 d-flex justify-content-center align-items-center">
+            {% block header %}
+                <div class="row col-8 justify-content-end align-items-center">
+                    <div class="text-center col-8">
+                        <a href="{% url 'home' %}">
+                            <img src="{% static 'images/logo.png' %}" alt="logo" class="img-fluid" width="60"
+                                 height="60">
+                        </a>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button class="btn btn-link" id="theme-toggler" aria-label="Toggle theme">
+                            <i class="bi bi-brightness-high-fill theme-icon text-primary" style="font-size: 1.5rem;"></i>
+                            <i class="bi bi-moon-stars-fill theme-icon d-none" style="font-size: 1.5rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            {% endblock %}
+        </header>
+
+        <main class="col-12 mt-5 mb-5">
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <footer class="container-fluid bg-body-tertiary py-3">
+            {% block footer %}
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="text-muted">
+                                본 설문은 (재)한국과학창의재단에서 후원하는 자율주제 과학영재 창의연구(R&E) 『Adaptive Interpolation in Multi-Region
+                                Color Correction for Color Vision Deficiency』의 일환으로 제작되었습니다.
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted">연구자: 유태영, 윤명, 이준석, 전지호.<br>
+                                연구기관: 경기과학고등학교, 한국과학창의재단.<br>
+                                웹사이트 제작: 이준석</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12 text-center">
+                            <p class="text-muted"><a href="{% url 'contact' %}"
+                                                     class="text-decoration-none">문의하기</a></p>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+        </footer>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha256-YMa+wAM6QkVyz999odX7lPRxkoYAan8suedu4k2Zur8=" crossorigin="anonymous"></script>
+<script>
+    const getStoredTheme = () => localStorage.getItem('theme');
+    const setStoredTheme = theme => localStorage.setItem('theme', theme);
+
+    const getPreferredTheme = () => {
+        const storedTheme = getStoredTheme();
+        if (storedTheme) {
+            return storedTheme;
+        }
+        return 'light';
+    }
+
+    const setTheme = theme => {
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-bs-theme');
+        }
+        showActiveThemeIcon(theme);
+    }
+
+    const showActiveThemeIcon = theme => {
+        const lightIcon = document.querySelector('.bi-brightness-high-fill');
+        const darkIcon = document.querySelector('.bi-moon-stars-fill');
+        if (theme === 'dark') {
+            lightIcon.classList.add('d-none');
+            darkIcon.classList.remove('d-none');
+        } else {
+            darkIcon.classList.add('d-none');
+            lightIcon.classList.remove('d-none');
+        }
+    }
+
+    document.querySelector('#theme-toggler').addEventListener('click', () => {
+        const currentTheme = getStoredTheme() === 'dark' ? 'light' : 'dark';
+        setStoredTheme(currentTheme);
+        setTheme(currentTheme);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setTheme(getPreferredTheme());
+    });
+</script>
+{% block javascript %}
+{% endblock %}
+</body>
+</html>

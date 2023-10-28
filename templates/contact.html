@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4>문의하기</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="{{ form.name.id_for_label }}">이름:</label>
+                                <input type="text" class="form-control" id="{{ form.name.id_for_label }}"
+                                       name="{{ form.name.name }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.email.id_for_label }}">이메일:</label>
+                                <input type="email" class="form-control" id="{{ form.email.id_for_label }}"
+                                       name="{{ form.email.name }}" required>
+                            </div>
+                            <div class="form-group pb-2">
+                                <label for="{{ form.subject.id_for_label }}">제목:</label>
+                                <input type="text" class="form-control" id="{{ form.subject.id_for_label }}"
+                                       name="{{ form.subject.name }}" required>
+                            </div>
+                            <div class="form-group pb-2">
+                                <label for="{{ form.message.id_for_label }}">내용:</label>
+                                <textarea class="form-control" id="{{ form.message.id_for_label }}"
+                                          name="{{ form.message.name }}" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">제출</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

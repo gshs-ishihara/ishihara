@@ -1,0 +1,29 @@
+<body style="font-family: Noto Sans KR, sans-serif; font-size: 18px; margin: 20px; padding: 0; background-color: #ffffff;">
+<div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 5px;">
+    <div style="background-color: #4CAF50; padding: 10px; text-align: center; color: #ffffff; font-size: 24px; border-radius: 5px 5px 0 0;">
+        Ishihara Test Result
+    </div>
+    <div style="padding: 20px;">
+        <h3>제1·2종 색각 이상 검사 결과 ({{ test_type }})</h3>
+        <p>설문에 응해 주셔서 감사합니다. 검사 결과는 아래와 같습니다.</p>
+
+        <div style="border: 1px solid #eaeaea; padding: 5px; border-radius: 5px; margin: 5px 0; font-size: 20px;">
+            <p><strong>검사 일시:</strong> {{ submitted_at }}</p>
+            <p><strong>색각 이상 정도:</strong> {{ cvd_score }}
+                {% if cvd_score != "없음" %}{% if cvd_type %}({{ cvd_type }}색각 이상){% endif %}{% endif %}</p>
+            <p><strong>검사 종류:</strong> {{ test_type }}</p>
+        </div>
+
+        <p>자세한 검사 결과를 보시려면 아래 링크를 클릭해 주세요.</p>
+        <a href="{{ result_url }}"
+           style="display: inline-block; background-color: #4CAF50; color: #ffffff; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; margin-bottom: 20px;"
+           target="_blank">결과 보기</a>
+
+        <p>검사 결과를 공유하려면 아래 링크를 이용해 주세요.</p>
+        <a href="{{ share_url }}" style="color: #4CAF50; text-decoration: none;" target="_blank">{{ share_url }}</a>
+
+        <p>문의 사항이 있으시면 사이트를 통해 문의해 주세요.</p>
+        <p>경기과학고등학교<br>유태영, 윤명, 이준석, 전지호 드림.</p>
+    </div>
+</div>
+</body>

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    제1·2종 색각 이상 검사 결과
+{% endblock %}
+
+{% block content %}
+    <div class="card col-md-8 mx-auto">
+        <div class="card-header d-flex justify-content-center">
+            <h2 class="card-title text-center">제1·2종 색각 이상 검사 결과
+                ({% if user.test_type == "short" %}간편{% else %}정밀{% endif %})</h2>
+        </div>
+        <div class="card.body py-3 px-4 text-center">
+            <div class="row mb-3">
+                <i id="levelIcon" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="card-title" id="levelText"></h3>
+            <p class="card-text" id="levelDescription"></p>
+
+            <h4 class="mt-5">친구와 공유하기</h4>
+            <p class="text-muted">공유된 링크로 응답한 친구가 가장 많은 사람에게 스타벅스 기프티콘 2잔!</p>
+            <div class="col-md-6 mx-auto">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="shareUrl" readonly>
+                    <button class="btn btn-outline-secondary" id="copyBtn" onclick="copyToClipboard()">
+                        <i id="copyIcon" class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            </div>
+            <h4 class="mt-3">{{ user.share_count }}명과 공유됨.</h4>
+            <a href="{% url 'home' %}" class="btn btn-primary mt-2">홈으로</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        const score = {{ test.score }};
+        const cvdType = '{{ test.cvd_type }}' === 'pro' ? '적' : '{{ test.cvd_type }}' === 'deu' ? '녹' : '';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let iconElement = document.getElementById('levelIcon');
+            let textElement = document.getElementById('levelText');
+            let descriptionElement = document.getElementById('levelDescription');
+
+            if (score <= 15) {
+                iconElement.className = 'bi bi-check-circle-fill text-success';
+                textElement.innerText = '색각 이상 정도: 없음';
+                descriptionElement.innerText = '색각 이상이 없습니다.';
+            } else if (score <= 40) {
+                iconElement.className = 'bi bi-exclamation-triangle-fill text-warning';
+                textElement.innerText = `색각 이상 정도: 보통 ${cvdType ? `(${cvdType}색각 이상)` : ''}`;
+                descriptionElement.innerText = `${ cvdType }색각 이상이 의심됩니다.`;
+            } else if (score <= 65) {
+                iconElement.className = 'bi bi-exclamation-circle-fill text-danger';
+                textElement.innerText = `색각 이상 정도: 높음 ${cvdType ? `(${cvdType}색각 이상)` : ''}`;
+                descriptionElement.innerText = `${ cvdType }색각 이상이 의심됩니다.`;
+            } else if (score <= 100) {
+                iconElement.className = 'bi bi-x-circle-fill text-danger';
+                textElement.innerText = `색각 이상 정도: 매우 높음 ${cvdType ? `(${cvdType}색각 이상)` : ''}`;
+                descriptionElement.innerText = `심각한 ${ cvdType }색각 이상 또는 전색맹이 의심됩니다.`;
+            }
+        });
+
+        const shareUrl = document.getElementById('shareUrl');
+        shareUrl.value = '{{ request.scheme }}://{{ request.get_host }}{% url 'share' user.token %}';
+
+        function copyToClipboard() {
+            const el = document.getElementById('shareUrl');
+            document.execCommand('copy');
+            navigator.clipboard.writeText(el.value).then(() => {
+                document.getElementById('copyIcon').classList.remove('bi-clipboard');
+                document.getElementById('copyIcon').classList.add('bi-clipboard-check');
+
+                setTimeout(() => {
+                    document.getElementById('copyIcon').classList.remove('bi-clipboard-check');
+                    document.getElementById('copyIcon').classList.add('bi-clipboard');
+                    document.getElementById('copyMessage').style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+{% endblock %}

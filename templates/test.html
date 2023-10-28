@@ -1,0 +1,699 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}제1·2종 색각 이상 검사{% endblock %}
+
+{% block css %}
+    <style>
+        label.required:after {
+            content: " *";
+            color: red;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="card col-md-8 mx-auto">
+        <div class="card-header row flex justify-content-end align-items-center">
+            <div class="col-sm-8 text-center">
+                <h2 class="card-title text-center">제1·2종 색각 이상 검사
+                    <span style="display: inline-block">({% if test_type == "short" %}간편{% else %}정밀{% endif %})</span></h2>
+            </div>
+            <div class="col-sm-2 text-end">
+                <button type="button" class="btn btn-outline-danger" onclick="restartTest()">다시 시작</button>
+            </div>
+        </div>
+        <div class="card.body py-3 px-4">
+            <form method="post">
+                {% csrf_token %}
+                <div id="instructionPage" style="display: block;">
+                    <div class="alert alert-info p-4 rounded">
+                        <h3 class="text-center mb-4"><i class="bi bi-info-circle-fill me-2"></i>검사 안내</h3>
+                        <p><strong>설명:</strong> 본 설문지는 적록 색각 이상을 감별하기 위해 1917년 안과 의사 시노부 이시하라가 고안한 색 인지 검사인 이시하라 검사지의
+                            일부를 발췌하여 제작되었습니다.</p>
+                        <ul class="list-unstyled ps-3">
+                            <li><i class="bi bi-lightbulb-fill me-2 text-warning"></i>본 검사를 진행하기 앞서 정확한 검사를 위해 적절히 밝은 실내
+                                환경에서 진행할 것을 권장합니다.
+                            </li>
+                            <li><i class="bi bi-x-circle-fill me-2 text-danger"></i>화면 색에 영향을 줄 수 있는 소프트웨어나 기능(색 보정 필터,
+                                Night Shift 등)은 모두 종료해 주십시오.
+                            </li>
+                            <li><i class="bi bi-stopwatch-fill me-2"></i>본 검사는 총
+                                <strong>{% if test_type == "short" %}13{% else %}25{% endif %}문항</strong>으로 구성되어 있으며, 한 문항에
+                                <strong>5초 이상</strong> 고민하지 마십시오.
+                            </li>
+                            <li><i class="bi bi-eye-fill me-2"></i>각 문항에 제시된 그림을 보고, <strong>한눈에 보이는 숫자</strong>를 쓰십시오.
+                            </li>
+                            <li><i class="bi bi-question-circle-fill me-2 text-secondary"></i>만약 숫자가 보이지 않는다면 <strong>'숫자가
+                                보이지 않음'</strong>을 선택하십시오.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="questionPage" style="display: none;">
+                    <div style="height: 233px;">
+                        <img id="ishiharaImage" src="" alt="Ishihara test plate" class="img-fluid mb-3 mx-auto d-block">
+                    </div>
+                    <input type="text" id="numberInput" pattern="\d*" placeholder="숫자를 입력하세요" class="form-control my-3"
+                           autofocus autocomplete="off">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="noNumberOption">
+                        <label class="form-check-label" for="noNumberOption">숫자가 보이지 않음</label>
+                    </div>
+                    <div id="errorMessage" class="alert alert-danger alert-dismissible mt-3" role="alert"
+                         style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        숫자를 입력하거나, '숫자가 보이지 않음'을 체크해야 합니다.
+                        <button type="button" class="btn-close" id="closeErrorBtn" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div id="userInfoPage" style="display: none;">
+                    <h2>참가자 정보</h2>
+                    <p>참가자 정보를 입력해 주세요.</p>
+                    <div class="row mb-3">
+                        <label for="name" class="col-sm-2 col-form-label required">이름</label>
+                        <div class="col-sm-10">
+                            <input type="text" id="name" class="form-control" placeholder="홍길동" required>
+                            <div class="invalid-feedback">
+                                이름을 입력하세요.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="phone" class="col-sm-2 col-form-label required">전화번호</label>
+                        <div class="col-sm-10">
+                            <input type="tel" id="phone" class="form-control" placeholder="010-XXXX-XXXX"
+                                   required>
+                            <div class="invalid-feedback">
+                                전화번호를 정확하게 입력하세요.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="email" class="col-sm-2 col-form-label required">이메일</label>
+                        <div class="col-sm-10">
+                            <input type="email" id="email" class="form-control" placeholder="example@email.com"
+                                   required>
+                            <div class="invalid-feedback">
+                                이메일 주소를 정확하게 입력하세요.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="dobYear" class="col-sm-2 col-form-label required">생년월일</label>
+                        <div class="col-sm-10">
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="text" pattern="\d*" id="dobYear" class="form-control"
+                                           placeholder="YYYY" required>
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" pattern="\d*" id="dobMonth" class="form-control" placeholder="MM"
+                                           required>
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" pattern="\d*" id="dobDay" class="form-control" placeholder="DD"
+                                           required>
+                                </div>
+                                <div class="invalid-feedback" id="dobInvalid">
+                                    생년월일을 정확하게 입력하세요.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="gender" class="col-sm-2 col-form-label required">성별</label>
+                        <div class="col-sm-10">
+                            <select id="gender" class="form-select" required>
+                                <option selected disabled value="">성별을 선택하세요</option>
+                                <option value="Male">남성</option>
+                                <option value="Female">여성</option>
+                                <option value="Other">기타</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                성별을 선택하세요.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="cvdTest" class="col-form-label required">이전에 색각 이상 검사를 실시한 적이 있다면 '예' 또는
+                            '아니요'로 응답하십시오.</label>
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cvdTest" id="cvdTestYes"
+                                       value="Yes" required>
+                                <label class="form-check-label" for="cvdTestYes">
+                                    예. (색각 이상자입니다.)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cvdTest" id="cvdTestNo"
+                                       value="No" required>
+                                <label class="form-check-label" for="cvdTestNo">
+                                    아니요. (색각 이상자가 아닙니다.)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cvdTest" id="cvdTestUnknown"
+                                       value="Unknown" required>
+                                <label class="form-check-label" for="cvdTestUnknown">
+                                    모릅니다. (정식으로 검사를 받은 적이 없거나 기억이 나지 않습니다.)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="privacyAgreement" required>
+                            <label class="form-check-label required" for="privacyAgreement" data-privacy-read="false">개인정보
+                                수집 및 이용에 동의합니다.
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">보기</a>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="sincerityConfirmation" required>
+                            <label class="form-check-label required" for="sincerityConfirmation">본인은 본 검사를 진행하는 동안 성실하게
+                                응답하였으며, 모든 정보를 정확하게 기재하였음을 확인합니다.
+                            </label>
+                        </div>
+                        <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded shadow-lg">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="privacyModalLabel">개인정보 수집 및 이용에 대한 동의</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <ul class="list-group list-group-flush mb-3">
+                                            <li class="list-group-item"><strong>수집 항목</strong>: 이름, 연락처, 이메일, 생년월일, 성별,
+                                                색각 이상 여부
+                                            </li>
+                                            <li class="list-group-item"><strong>수집 목적</strong>: 연구 참여자의 신원 확인, 검사 결과 및
+                                                경품 발송, 연구 대상자 모집.
+                                            </li>
+                                            <li class="list-group-item"><strong>보유 기간</strong>: 연구 대상자 모집 및 경품 발송 완료
+                                                시까지. 연구 대상자의 경우, 연구 종료 후 3개월 이내.
+                                            </li>
+                                            <li class="list-group-item">개인정보 수집 및 이용을 거부할 수 있습니다.
+                                                단, 거부하실 경우 연구 대상자로 선정되지 않으며, 검사 결과 및 경품 발송에 제한이 있을 수 있습니다.
+                                            </li>
+                                        </ul>
+                                        <hr>
+                                        <p class="text-muted"><small>본 연구는 경기과학고등학교에서 진행되는 연구이며,
+                                            연구 대상자를 모집한 뒤, 기관생명윤리위원회(IRB)의 심의를 거칠 예정입니다.
+                                            연구 참여자의 개인정보는 연구 목적과 경품 발송에 한하여 사용되며, 어떠한 경우에도 제3자에게 제공되지 않습니다.</small>
+                                        </p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="phoneNumberExists" class="alert alert-danger alert-dismissible mt-3" role="alert"
+                         style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="phoneNumberExistsText"></span>
+                        <button type="button" class="btn-close" id="closePhoneErrorBtn" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between flex-row-reverse mt-3">
+                    <button type="button" id="nextBtn" onclick="move(1)" class="btn btn-primary">검사 시작</button>
+                    <button type="button" id="prevBtn" onclick="move(-1)" class="btn btn-outline-secondary"
+                            style="display: none;">이전
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="progressDiv" class="card-footer" style="display: none;">
+            <div class="progress">
+                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                     aria-valuemin="0"
+                     aria-valuemax="{{ total_questions }}"></div>
+            </div>
+            <p id="progressText" class="text-center">0 of {{ total_questions }}</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        const state = {
+            testType: '{{ test_type }}',
+            totalQuestions: '{{ test_type }}' === 'short' ? 13 : 25,
+            questionIndices: '{{ test_type }}' === 'short' ? [0, 1, 2, 4, 6, 9, 11, 13, 14, 16, 18, 20, 22, 23] : [...Array(26).keys()],
+            score: parseInt(localStorage.getItem('score')) || 0,
+            currentStep: localStorage.getItem('currentStep') || 'instructions',
+            currentQuestion: parseInt(localStorage.getItem('currentQuestion')) || 1,
+            responses: JSON.parse(localStorage.getItem('responses')) || [],
+            userInfo: JSON.parse(localStorage.getItem('userInfo')) || {},
+            dobYear: localStorage.getItem('dobYear') || '',
+            dobMonth: localStorage.getItem('dobMonth') || '',
+            dobDay: localStorage.getItem('dobDay') || '',
+            privacyAgreement: localStorage.getItem('privacyAgreement') || false,
+            sincerityConfirmation: localStorage.getItem('sincerityConfirmation') || false,
+            error: localStorage.getItem('error') || '',
+        };
+        const elements = {
+            instructionPage: document.getElementById('instructionPage'),
+            questionPage: document.getElementById('questionPage'),
+            userInfoPage: document.getElementById('userInfoPage'),
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            progressDiv: document.getElementById('progressDiv'),
+            progressBar: document.getElementById('progressBar'),
+            progressText: document.getElementById('progressText'),
+            numberInput: document.getElementById('numberInput'),
+            noNumberOption: document.getElementById('noNumberOption'),
+            image: document.getElementById('ishiharaImage'),
+            errorMessage: document.getElementById('errorMessage'),
+            closeErrorBtn: document.getElementById('closeErrorBtn'),
+            name: document.getElementById('name'),
+            phone: document.getElementById('phone'),
+            email: document.getElementById('email'),
+            dobYear: document.getElementById('dobYear'),
+            dobMonth: document.getElementById('dobMonth'),
+            dobDay: document.getElementById('dobDay'),
+            dobInvalid: document.getElementById('dobInvalid'),
+            gender: document.getElementById('gender'),
+            cvd_test: document.getElementsByName('cvdTest'),
+            privacyAgreement: document.getElementById('privacyAgreement'),
+            privacyModal: document.getElementById('privacyModal'),
+            sincerityConfirmation: document.getElementById('sincerityConfirmation'),
+            phoneNumberExists: document.getElementById('phoneNumberExists'),
+            phoneNumberExistsText: document.getElementById('phoneNumberExistsText'),
+            closePhoneErrorBtn: document.getElementById('closePhoneErrorBtn'),
+        };
+
+        function updateUI() {
+            elements.instructionPage.style.display = (state.currentStep === 'instructions') ? 'block' : 'none';
+            elements.questionPage.style.display = (state.currentStep === 'questions') ? 'block' : 'none';
+            elements.userInfoPage.style.display = (state.currentStep === 'user_info') ? 'block' : 'none';
+            $(elements.numberInput).prop('disabled', false);
+
+            elements.progressDiv.style.display = (state.currentStep === 'questions') ? 'block' : 'none';
+            elements.prevBtn.style.display = (state.currentStep === 'instructions') ? 'none' : 'block';
+
+            elements.numberInput.value = state.responses[state.currentQuestion - 1] || '';
+            elements.noNumberOption.checked = false;
+            if (state.responses[state.currentQuestion - 1] === '-') {
+                elements.noNumberOption.checked = true;
+                elements.numberInput.value = '';
+                $(elements.numberInput).prop('disabled', true);
+            }
+
+            if (state.currentStep === 'questions') {
+                updateProgress();
+                elements.numberInput.focus();
+                elements.image.src = `{% static 'images/ishihara' %}/q${state.questionIndices[state.currentQuestion]}.jpg`;
+            }
+            if (state.currentStep === 'user_info') {
+                console.log(state.userInfo);
+                elements.name.value = state.userInfo.name || '';
+                elements.phone.value = state.userInfo.phone || '';
+                elements.email.value = state.userInfo.email || '';
+                elements.dobYear.value = state.dobYear || '';
+                elements.dobMonth.value = state.dobMonth || '';
+                elements.dobDay.value = state.dobDay || '';
+                elements.gender.value = state.userInfo.gender || '';
+                for (let i = 0; i < elements.cvd_test.length; i++) {
+                    if (elements.cvd_test[i].value === state.userInfo.cvd_test) {
+                        elements.cvd_test[i].checked = true;
+                    }
+                }
+                elements.privacyAgreement.checked = state.privacyAgreement || false;
+                elements.sincerityConfirmation.checked = state.sincerityConfirmation || false;
+
+                if (state.error) {
+                    elements.phoneNumberExistsText.innerText = state.error;
+                    $(elements.phone).addClass('is-invalid');
+                    $(elements.phoneNumberExists).show();
+                } else {
+                    $(elements.phoneNumberExists).hide();
+                }
+            }
+            if (state.submitting) {
+                $(elements.nextBtn).addClass('disabled').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 제출 중...');
+            } else {
+                const btnText = (state.currentStep === 'instructions') ? '검사 시작' : (state.currentStep === 'questions') ? '다음' : '제출';
+                const btnClass = (state.currentStep === 'instructions' || state.currentStep === 'user_info') ? 'btn-primary' : 'btn-outline-primary';
+                $(elements.nextBtn).removeClass('btn-primary btn-outline-primary').addClass(btnClass);
+                elements.nextBtn.innerText = btnText;
+            }
+        }
+
+        function updateProgress() {
+            const percent = (state.currentQuestion / state.totalQuestions) * 100;
+            elements.progressBar.style.width = `${percent}%`;
+            elements.progressBar.setAttribute('aria-valuenow', state.currentQuestion);
+            elements.progressText.innerText = `${state.currentQuestion} of ${state.totalQuestions}`;
+        }
+
+        function move(n) {
+            switch (state.currentStep) {
+                case 'instructions':
+                    if (n === 1) {
+                        state.currentStep = 'questions';
+                    }
+                    break
+                case 'questions':
+                    if (n === -1 && state.currentQuestion === 1) {
+                        state.currentStep = 'instructions';
+                    } else if (n === -1 && state.currentQuestion > 1) {
+                        state.currentQuestion--;
+                    } else if (n === 1) {
+                        const numberInput = elements.numberInput.value;
+                        const noNumberOption = elements.noNumberOption.checked;
+                        if (!numberInput && !noNumberOption) {
+                            $(elements.errorMessage).show();
+                        } else {
+                            $(elements.errorMessage).hide();
+                            if (numberInput && !noNumberOption) {
+                                state.responses[state.currentQuestion - 1] = numberInput;
+                            } else if (noNumberOption) {
+                                state.responses[state.currentQuestion - 1] = '-';
+                            }
+                            localStorage.setItem('responses', JSON.stringify(state.responses));
+                            if (state.currentQuestion < state.totalQuestions) {
+                                state.currentQuestion++;
+                            } else if (state.currentQuestion === state.totalQuestions) {
+                                state.currentStep = 'user_info';
+                            }
+                            elements.noNumberOption.checked = false;
+                            elements.numberInput.value = '';
+                            $(elements.errorMessage).hide();
+                        }
+                    }
+                    break
+                case 'user_info':
+                    if (n === 1) {
+                        state.userInfo = {
+                            name: elements.name.value,
+                            phone: elements.phone.value,
+                            email: elements.email.value,
+                            gender: elements.gender.value,
+                            cvd_test: $('input[name="cvdTest"]:checked').val(),
+                        };
+                        state.dobYear = elements.dobYear.value;
+                        state.dobMonth = elements.dobMonth.value;
+                        state.dobDay = elements.dobDay.value;
+                        state.privacyAgreement = elements.privacyAgreement.checked;
+                        state.sincerityConfirmation = elements.sincerityConfirmation.checked;
+                        let valid = true;
+                        for (const [key, value] of Object.entries(state.userInfo)) {
+                            if (!value) {
+                                $(elements[key]).addClass('is-invalid');
+                                valid = false;
+                            } else {
+                                $(elements[key]).removeClass('is-invalid');
+                            }
+                        }
+                        if (state.userInfo.email) {
+                            const emailRegex = /\S+@\S+\.\S+/;
+                            if (!emailRegex.test(state.userInfo.email)) {
+                                $(elements.email).addClass('is-invalid');
+                                valid = false;
+                            } else {
+                                $(elements.email).removeClass('is-invalid');
+                            }
+                        }
+                        if (state.userInfo.phone) {
+                            const phoneRegex = /^\d{3}-\d{4}-\d{4}$/;
+                            if (!phoneRegex.test(state.userInfo.phone)) {
+                                $(elements.phone).addClass('is-invalid');
+                                valid = false;
+                            } else {
+                                $(elements.phone).removeClass('is-invalid');
+                            }
+                        }
+                        if (!state.privacyAgreement) {
+                            $(elements.privacyAgreement).addClass('is-invalid');
+                            valid = false;
+                        } else {
+                            $(elements.privacyAgreement).removeClass('is-invalid');
+                        }
+                        if (!state.sincerityConfirmation) {
+                            $(elements.sincerityConfirmation).addClass('is-invalid');
+                            valid = false;
+                        } else {
+                            $(elements.sincerityConfirmation).removeClass('is-invalid');
+                        }
+                        let year = parseInt(state.dobYear);
+                        let month = parseInt(state.dobMonth);
+                        let day = parseInt(state.dobDay);
+                        let date = new Date(year, month - 1, day);
+                        if (date.getFullYear() !== year || date.getMonth() + 1 !== month || date.getDate() !== day) {
+                            valid = false;
+                            $(elements.dobYear).addClass('is-invalid');
+                            $(elements.dobMonth).addClass('is-invalid');
+                            $(elements.dobDay).addClass('is-invalid');
+                            $(elements.dobInvalid).show();
+                        } else {
+                            $(elements.dobYear).removeClass('is-invalid');
+                            $(elements.dobMonth).removeClass('is-invalid');
+                            $(elements.dobDay).removeClass('is-invalid');
+                            $(elements.dobInvalid).hide();
+                        }
+                        if (!valid) {
+                            return;
+                        }
+                        state.userInfo.dob = date.toISOString().split('T')[0];
+                        localStorage.setItem('userInfo', JSON.stringify(state.userInfo));
+                        localStorage.setItem('dobYear', state.dobYear);
+                        localStorage.setItem('dobMonth', state.dobMonth);
+                        localStorage.setItem('dobDay', state.dobDay);
+                        localStorage.setItem('privacyAgreement', state.privacyAgreement);
+                        localStorage.setItem('sincerityConfirmation', state.sincerityConfirmation);
+                        submitForm();
+                    } else {
+                        state.currentStep = 'questions';
+                    }
+                    break
+            }
+            updateUI();
+            localStorage.setItem('currentStep', state.currentStep);
+            localStorage.setItem('currentQuestion', state.currentQuestion);
+        }
+
+        window.addEventListener('load', updateUI);
+
+        $(document).ready(function () {
+            $(document).on('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    move(1);
+                }
+            });
+            $(document).on('keydown', function (event) {
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    console.log(state);
+                }
+            });
+
+            $(elements.phone).on("input", function () {
+                let value = $(this).val().replace(/[^0-9]/g, "");  // Only keep numbers
+                if (value.length > 3 && value.length <= 7) {
+                    value = value.slice(0, 3) + "-" + value.slice(3);
+                } else if (value.length > 7) {
+                    value = value.slice(0, 3) + "-" + value.slice(3, 7) + "-" + value.slice(7, 11);
+                }
+                $(this).val(value);
+            });
+
+            $(elements.closeErrorBtn).on('click', function () {
+                $(elements.errorMessage).hide();
+            });
+
+            $(elements.closePhoneErrorBtn).on('click', function () {
+                $(elements.phoneNumberExists).hide();
+            });
+
+            $(elements.noNumberOption).on('change', function () {
+                if ($(this).is(':checked')) {
+                    $(elements.numberInput).val('').prop('disabled', true);
+                } else {
+                    $(elements.numberInput).prop('disabled', false);
+                }
+            });
+
+            $(elements.dobYear).on('input', function () {
+                $(this).val($(this).val().replace(/[^0-9]/g, ""));
+                $(this).val($(this).val().slice(0, 4));
+            });
+
+            [elements.dobMonth, elements.dobDay].forEach(input => {
+                $(input).on('input', function () {
+                    $(this).val($(this).val().replace(/[^0-9]/g, ""));
+                    $(this).val($(this).val().slice(0, 2));
+                });
+            });
+
+            $(elements.dobYear).on('input', function () {
+                if ($(this).val().length === 4) {
+                    $(elements.dobMonth).focus();
+                }
+            });
+
+            $(elements.dobMonth).on('input', function () {
+                if ($(this).val().length === 2 || ($(this).val().length === 1 && parseInt($(this).val()) > 1)) {
+                    if ($(this).val().length === 1) {
+                        $(this).val('0' + $(this).val());
+                    }
+                    $(elements.dobDay).focus();
+                }
+            });
+
+            $(elements.dobMonth).on('focusout', function () {
+                if ($(this).val().length === 1) {
+                    $(this).val('0' + $(this).val());
+                }
+            });
+
+            $(elements.privacyAgreement).on('click', function (e) {
+                if (!$(this).attr('data-privacy-read')) {
+                    e.preventDefault();
+                    $(elements.privacyModal).modal('show');
+                }
+            });
+
+            $(elements.privacyModal).on('hide.bs.modal', function () {
+                $(elements.privacyAgreement).attr('data-privacy-read', 'true');
+            });
+        });
+
+        function calculateScore(responses) {
+            let LONG_ANSWER = ["12", "8", "6", "29", "57", "5", "3", "15", "74", "2", "6", "97", "45", "5", "7", "16", "73",
+                "-", "-", "-", "-", "26", "42", "35", "96"];
+            let LONG_ANSWER_RG = ["12", "3", "5", "70", "35", "2", "5", "17", "21", "-", "-", "-", "-", "-", "-", "-", "-",
+                "5", "2", "45", "73", "2,6", "4,2", "3,5", "9,6"];
+            let SHORT_ANSWER = ["12", "8", "29", "5", "74", "6", "45", "5", "16", "-", "-", "26", "42"];
+            let SHORT_ANSWER_RG = ["12", "3", "70", "2", "21", "-", "-", "-", "-", "5", "45", "2,6", "4,2"];
+            let test_type = state.testType
+            let score = 0;
+            let deu = 0, pro = 0;
+
+            if (test_type === 'short') {
+                let totalQuestions = SHORT_ANSWER.length - 1;
+                for (let i = 1; i <= totalQuestions; i++) {
+                    if (responses[i] === SHORT_ANSWER_RG[i]) {
+                        score += 1;
+                    } else if (responses[i] === SHORT_ANSWER[i]) {
+                        score += 0;
+                    } else if (SHORT_ANSWER_RG[i].includes(",")) {
+                        let rg = SHORT_ANSWER_RG[i].split(",");
+                        if (rg[0] === responses[i]) {
+                            score += 1;
+                            deu += 1;
+                        } else if (rg[1] === responses[i]) {
+                            score += 1;
+                            pro += 1;
+                        }
+                    } else if (SHORT_ANSWER_RG[i] !== "-") {
+                        score += 0.9;
+                    } else {
+                        score += 1;
+                    }
+                }
+                score = score / totalQuestions;
+                state.cvd_type = (deu > pro) ? "deu" : (deu < pro) ? "pro" : "mid";
+            } else if (test_type === 'long') {
+                let totalQuestions = LONG_ANSWER.length - 1;
+                for (let i = 1; i <= totalQuestions; i++) {
+                    if (LONG_ANSWER_RG[i].includes(responses[i])) {
+                        score += 1;
+                    } else if (responses[i] === LONG_ANSWER[i]) {
+                        score += 0;
+                    } else if (LONG_ANSWER_RG[i] !== "-") {
+                        score += 0.8;
+                    } else if (LONG_ANSWER_RG[i].includes(",")) {
+                        let rg = LONG_ANSWER_RG[i].split(",");
+                        if (rg[0] === responses[i]) {
+                            score += 1;
+                            deu += 1;
+                        } else if (rg[1] === responses[i]) {
+                            score += 1;
+                            pro += 1;
+                        }
+                    } else {
+                        score += 1;
+                    }
+                }
+                score = score / totalQuestions;
+                state.cvd_type = (deu > pro) ? "deu" : (deu < pro) ? "pro" : "mid";
+            }
+            console.log(score);
+            state.score = Math.round(score * 100);
+        }
+
+        function restartTest() {
+            localStorage.removeItem('currentStep');
+            localStorage.removeItem('currentQuestion');
+            localStorage.removeItem('responses');
+            localStorage.removeItem('userInfo');
+            localStorage.removeItem('score');
+            localStorage.removeItem('dobYear');
+            localStorage.removeItem('dobMonth');
+            localStorage.removeItem('dobDay');
+            localStorage.removeItem('privacyAgreement');
+            localStorage.removeItem('sincerityConfirmation');
+            window.location.href = '{% url "test" test_type %}';
+        }
+
+        function submitForm() {
+            state.submitting = true;
+            const responses = JSON.parse(localStorage.getItem('responses'));
+            calculateScore(responses);
+            const data = {
+                responses: responses,
+                user_info: state.userInfo,
+                test_type: state.testType,
+                score: state.score,
+                cvd_type: state.cvd_type
+            }
+            $.ajax({
+                type: 'POST',
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                url: '{% url "submit_test" %}',
+                data: JSON.stringify(data),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    state.submitting = false;
+                    if (response.error) {
+                        state.error = response.error;
+                        $(elements.phoneNumberExists).show();
+                        $(elements.nextBtn).removeClass('disabled').html('제출');
+                        updateUI();
+                        return;
+                    }
+                    $(elements.phoneNumberExists).hide();
+                    const uuid = response.uuid;
+                    localStorage.removeItem('currentStep');
+                    localStorage.removeItem('currentQuestion');
+                    localStorage.removeItem('responses');
+                    localStorage.removeItem('userInfo');
+                    localStorage.removeItem('score');
+                    localStorage.removeItem('dobYear');
+                    localStorage.removeItem('dobMonth');
+                    localStorage.removeItem('dobDay');
+                    localStorage.removeItem('privacyAgreement');
+                    localStorage.removeItem('sincerityConfirmation');
+                    window.location.href = '/results/' + uuid;
+                },
+                error: function (response) {
+                    state.submitting = false;
+                    $(elements.nextBtn).removeClass('disabled').html('제출');
+                    alert('오류가 발생했습니다. 다시 시도해주세요.');
+                }
+            });
+        }
+    </script>
+{% endblock %}
