@@ -296,24 +296,25 @@
             elements.instructionPage.style.display = (state.currentStep === 'instructions') ? 'block' : 'none';
             elements.questionPage.style.display = (state.currentStep === 'questions') ? 'block' : 'none';
             elements.userInfoPage.style.display = (state.currentStep === 'user_info') ? 'block' : 'none';
-            $(elements.numberInput).prop('disabled', false);
+
+            if (state.currentStep === 'questions') {
+                elements.image.src = `{% static 'images/ishihara' %}/q${state.questionIndices[state.currentQuestion]}.jpg`;
+                updateProgress();
+                elements.numberInput.focus();
+            }
 
             elements.progressDiv.style.display = (state.currentStep === 'questions') ? 'block' : 'none';
             elements.prevBtn.style.display = (state.currentStep === 'instructions') ? 'none' : 'block';
 
             elements.numberInput.value = state.responses[state.currentQuestion - 1] || '';
             elements.noNumberOption.checked = false;
+            $(elements.numberInput).prop('disabled', false);
             if (state.responses[state.currentQuestion - 1] === '-') {
                 elements.noNumberOption.checked = true;
                 elements.numberInput.value = '';
                 $(elements.numberInput).prop('disabled', true);
             }
 
-            if (state.currentStep === 'questions') {
-                updateProgress();
-                elements.numberInput.focus();
-                elements.image.src = `{% static 'images/ishihara' %}/q${state.questionIndices[state.currentQuestion]}.jpg`;
-            }
             if (state.currentStep === 'user_info') {
                 console.log(state.userInfo);
                 elements.name.value = state.userInfo.name || '';
