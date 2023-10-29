@@ -17,7 +17,8 @@
         <div class="card-header row flex justify-content-end align-items-center">
             <div class="col-sm-8 text-center">
                 <h2 class="card-title text-center">제1·2종 색각 이상 검사
-                    <span style="display: inline-block">({% if test_type == "short" %}간편{% else %}정밀{% endif %})</span></h2>
+                    <span style="display: inline-block">({% if test_type == "short" %}간편{% else %}정밀{% endif %})</span>
+                </h2>
             </div>
             <div class="col-sm-2 text-end">
                 <button type="button" class="btn btn-outline-danger" onclick="restartTest()">다시 시작</button>
@@ -39,12 +40,13 @@
                                 Night Shift 등)은 모두 종료해 주십시오.
                             </li>
                             <li><i class="bi bi-stopwatch-fill me-2"></i>본 검사는 총
-                                <strong>{% if test_type == "short" %}13{% else %}25{% endif %}문항</strong>으로 구성되어 있으며, 한 문항에
+                                <strong>{% if test_type == "short" %}13{% else %}25{% endif %}문항</strong>으로 구성되어 있으며, 한
+                                문항에
                                 <strong>5초 이상</strong> 고민하지 마십시오.
                             </li>
                             <li><i class="bi bi-eye-fill me-2"></i>각 문항에 제시된 그림을 보고, <strong>한눈에 보이는 숫자</strong>를 쓰십시오.
                             </li>
-                            <li><i class="bi bi-question-circle-fill me-2 text-secondary"></i>만약 숫자가 보이지 않는다면 <strong>'숫자가
+                            <li><i class="bi bi-question-circle-fill me-2 text-secondary"></i>만약 숫자가 보이지 않는다면 <strong class="text-danger">'숫자가
                                 보이지 않음'</strong>을 선택하십시오.
                             </li>
                         </ul>
@@ -52,7 +54,8 @@
                 </div>
                 <div id="questionPage" style="display: none;">
                     <div style="height: 233px;">
-                        <img id="ishiharaImage" src="" alt="Ishihara test plate" class="img-fluid mb-3 mx-auto d-block">
+                        <img id="ishiharaImage" src="" alt="Ishihara test plate" class="img-fluid mb-3 mx-auto d-block"
+                             width="233">
                     </div>
                     <input type="text" id="numberInput" pattern="\d*" placeholder="숫자를 입력하세요" class="form-control my-3"
                            autofocus autocomplete="off">
@@ -590,12 +593,15 @@
                         score += 0;
                     } else if (SHORT_ANSWER_RG[i].includes(",")) {
                         let rg = SHORT_ANSWER_RG[i].split(",");
-                        if (rg[0] === responses[i]) {
+                        // if response[i] has same value with rg[0], then deu += 1 or if response[i] starts with the same value with rg[0], then deu += 1.
+                        if (responses[i].startsWith(rg[0])) {
                             score += 1;
                             deu += 1;
-                        } else if (rg[1] === responses[i]) {
+                        } else if (responses[i].endsWith(rg[1])) {
                             score += 1;
                             pro += 1;
+                        } else {
+                            score += 0.9;
                         }
                     } else if (SHORT_ANSWER_RG[i] !== "-") {
                         score += 0.9;

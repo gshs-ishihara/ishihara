@@ -39,7 +39,9 @@ def submit_test(request):
                 if test_type and UserInfo.objects.filter(phone=phone, test_type=test_type).exists():
                     return JsonResponse({"status": "error", "error": "이미 참여한 전화번호입니다."})
                 token = UserInfo.objects.get(phone=phone).token
+                share_count = UserInfo.objects.get(phone=phone).share_count
                 data['user_info']['token'] = token
+                data['user_info']['share_count'] = share_count
             user = UserInfo.objects.create(
                 **data['user_info'],
                 test_type=data['test_type'],
@@ -70,6 +72,7 @@ def submit_test(request):
                 'cvd_score': '없음' if test.score <= 15 else '보통' if test.score <= 40 else '높음' if test.score <= 65 else '매우 높음',
             }
             threading.Thread(target=send_email, args=(user.email, test_type, context)).start()
+            messages.success(request, f'검사 결과가 성공적으로 저장되었습니다. {user.email}로 결과를 전송하였습니다.')
             return JsonResponse({"status": "success", "uuid": str(user.uuid)})
     return HttpResponseBadRequest()
 
@@ -82,7 +85,6 @@ def send_email(user_email, test_type, context):
     email = EmailMessage(subject, html_content, from_email, recipient_list)
     email.content_subtype = "html"
     email.send()
-    print("Email sent to", email)
 
 
 def show_results(request, uuid):
