@@ -252,6 +252,7 @@
             testType: '{{ test_type }}',
             totalQuestions: '{{ test_type }}' === 'short' ? 13 : 25,
             questionIndices: '{{ test_type }}' === 'short' ? [0, 1, 2, 4, 6, 9, 11, 13, 14, 16, 18, 20, 22, 23] : [...Array(26).keys()],
+            localTestType: localStorage.getItem('testType') || '{{ test_type }}',
             score: parseInt(localStorage.getItem('score')) || 0,
             currentStep: localStorage.getItem('currentStep') || 'instructions',
             currentQuestion: parseInt(localStorage.getItem('currentQuestion')) || 1,
@@ -296,6 +297,9 @@
         };
 
         function updateUI() {
+            if (state.localTestType !== state.testType) {
+                restartTest();
+            }
             elements.instructionPage.style.display = (state.currentStep === 'instructions') ? 'block' : 'none';
             elements.questionPage.style.display = (state.currentStep === 'questions') ? 'block' : 'none';
             elements.userInfoPage.style.display = (state.currentStep === 'user_info') ? 'block' : 'none';
@@ -319,7 +323,6 @@
             }
 
             if (state.currentStep === 'user_info') {
-                console.log(state.userInfo);
                 elements.name.value = state.userInfo.name || '';
                 elements.phone.value = state.userInfo.phone || '';
                 elements.email.value = state.userInfo.email || '';
@@ -388,6 +391,9 @@
                             if (state.currentQuestion < state.totalQuestions) {
                                 state.currentQuestion++;
                             } else if (state.currentQuestion === state.totalQuestions) {
+                                state.currentStep = 'user_info';
+                            } else if (state.currentQuestion > state.totalQuestions) {
+                                state.currentQuestion = state.totalQuestions;
                                 state.currentStep = 'user_info';
                             }
                             elements.noNumberOption.checked = false;
@@ -486,19 +492,16 @@
             localStorage.setItem('currentQuestion', state.currentQuestion);
         }
 
-        window.addEventListener('load', updateUI);
+        window.addEventListener('load', function () {
+            localStorage.setItem('testType', state.testType);
+            updateUI();
+        });
 
         $(document).ready(function () {
             $(document).on('keydown', function (event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     move(1);
-                }
-            });
-            $(document).on('keydown', function (event) {
-                if (event.key === 'ArrowRight') {
-                    event.preventDefault();
-                    console.log(state);
                 }
             });
 
@@ -636,7 +639,6 @@
                 score = score / totalQuestions;
                 state.cvd_type = (deu > pro) ? "deu" : (deu < pro) ? "pro" : "mid";
             }
-            console.log(score);
             state.score = Math.round(score * 100);
         }
 
