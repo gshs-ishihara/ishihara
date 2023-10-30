@@ -28,7 +28,6 @@ def test_view(request, test_type):
 
 def submit_test(request):
     if request.method == 'POST':
-        print(request.body)
         if not request.body:
             return JsonResponse({"status": "error", "error": "No data provided."})
         data = json.loads(request.body.decode('utf-8'))
