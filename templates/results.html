@@ -6,6 +6,21 @@
 {% endblock %}
 
 {% block content %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-delay="10000">
+            <div class="toast-header">
+                <img src="{% static 'images/logo.png' %}" class="rounded me-2" alt="logo" width="20"
+                     height="20">
+                <strong class="me-auto">Ishihara-test.com</strong>
+                <small class="text-body-secondary">just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="messageText">
+            </div>
+        </div>
+    </div>
     <div class="card col-md-8 mx-auto">
         <div class="card-header d-flex justify-content-center">
             <h2 class="card-title text-center">제1·2종 색각 이상 검사 결과
@@ -28,10 +43,10 @@
                     </button>
                 </div>
                 <div class="d-flex justify-content-center mt-2">
-                    <button class="btn btn-warning rounded-circle me-4" onclick="shareChat()">
+                    <button class="btn btn-warning rounded-circle me-4" id="shareChat">
                         <i class="bi bi-chat-fill" style="font-size: 1.5rem;"></i>
                     </button>
-                    <button class="btn btn-danger rounded-circle" onclick="shareInstagram()">
+                    <button class="btn btn-danger rounded-circle" id="shareInstagram">
                         <i class="bi bi-instagram" style="font-size: 1.5rem;"></i>
                     </button>
                 </div>
@@ -44,44 +59,48 @@
 
 {% block javascript %}
     <script>
-        async function shareChat() {
+        document.getElementById('shareChat').addEventListener('click', async () => {
             const imageUrl = "{% static 'images/poster.png' %}";
             const response = await fetch(imageUrl);
             const blob = await response.blob();
-            const file = new File([blob], "poster.png", {type: 'image/png'});
-            const url = '{{ request.scheme }}://{{ request.get_host }}{% url 'share' user.token %}';
-            await navigator.clipboard.writeText(url);
-            if (navigator.canShare && navigator.canShare({files: [file]}) && navigator.canShare({url: url})) {
-                await navigator.share({
-                    title: '색약·색맹 검사하고 기프티콘 받자!',
-                    text: '색약·색맹 검사하고 기프티콘 받자!',
-                    url: url,
-                    files: [file],
-                })
-                    .then(() => {
-                        alert('공유가 완료되었습니다.');
-                    })
-                    .catch((error) => {
-                        alert('공유가 실패하였습니다.' + error);
-                    });
-            } else {
-                alert('공유하기를 지원하지 않는 브라우저입니다.');
+            const file = [new File([blob], "poster.png", {type: 'image/png'})];
+            const shareData = {
+                title: '색약·색맹 검사하고 기프티콘 받자!',
+                url: '{{ request.scheme }}://{{ request.get_host }}{% url 'share' user.token %}',
+                files: file,
+            };
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                document.getElementById('messageText').innerText = `공유하기를 지원하지 않는 브라우저입니다. ${err}`;
+                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                const toastList = toastElList.map(function (toastEl) {
+                    return new bootstrap.Toast(toastEl);
+                });
+                toastList.forEach(toast => toast.show());
             }
-        }
+        });
 
-        async function shareInstagram() {
+        document.getElementById('shareInstagram').addEventListener('click', async () => {
             const imageUrl = "{% static 'images/poster-portrait.png' %}";
             const response = await fetch(imageUrl);
             const blob = await response.blob();
-            const file = new File([blob], "poster-portrait.png", {type: 'image/png'});
-            if (navigator.canShare && navigator.canShare({files: [file]})) {
-                await navigator.share({
-                    files: [file],
+            const file = [new File([blob], "poster-portrait.png", {type: 'image/png'})];
+            const shareData = {
+                title: '',
+                files: file,
+            };
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                document.getElementById('messageText').innerText = `공유하기를 지원하지 않는 브라우저입니다. ${err}`;
+                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                const toastList = toastElList.map(function (toastEl) {
+                    return new bootstrap.Toast(toastEl);
                 });
-            } else {
-                alert('공유하기를 지원하지 않는 브라우저입니다.');
+                toastList.forEach(toast => toast.show());
             }
-        }
+        });
 
         const score = {{ test.score }};
         const cvdType = '{{ test.cvd_type }}' === 'pro' ? '적' : '{{ test.cvd_type }}' === 'deu' ? '녹' : '';
