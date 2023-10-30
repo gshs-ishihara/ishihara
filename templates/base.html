@@ -55,8 +55,8 @@
             {% if messages %}
                 <div class="toast-container position-fixed bottom-0 end-0 p-3">
                     {% for message in messages %}
-                        <div class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true"
-                             data-bs-delay="10000">
+                        <div class="toast align-items-center" id="toastMessage" role="alert" aria-live="assertive"
+                             aria-atomic="true" data-bs-delay="10000">
                             <div class="toast-header">
                                 <img src="{% static 'images/logo.png' %}" class="rounded me-2" alt="logo" width="20"
                                      height="20">
@@ -110,7 +110,7 @@
         integrity="sha256-YMa+wAM6QkVyz999odX7lPRxkoYAan8suedu4k2Zur8=" crossorigin="anonymous"></script>
 <script>
     window.addEventListener('DOMContentLoaded', function () {
-        var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+        var toastElList = [].slice.call(document.querySelectorAll('#toastMessage'))
         var toastList = toastElList.map(function (toastEl) {
             return new bootstrap.Toast(toastEl)
         });
