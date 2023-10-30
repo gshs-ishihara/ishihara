@@ -72,11 +72,7 @@
                 url: '{{ request.scheme }}://{{ request.get_host }}{% url 'share' user.token %}',
                 files: file,
             };
-            try {
-                await navigator.share(shareData);
-            } catch (err) {
-                alert(err);
-            }
+            await navigator.share(shareData);
         });
 
         function showInstagramToast() {

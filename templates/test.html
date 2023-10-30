@@ -596,7 +596,6 @@
                         score += 0;
                     } else if (SHORT_ANSWER_RG[i].includes(",")) {
                         let rg = SHORT_ANSWER_RG[i].split(",");
-                        // if response[i] has same value with rg[0], then deu += 1 or if response[i] starts with the same value with rg[0], then deu += 1.
                         if (responses[i].startsWith(rg[0])) {
                             score += 1;
                             deu += 1;
@@ -617,21 +616,23 @@
             } else if (test_type === 'long') {
                 let totalQuestions = LONG_ANSWER.length - 1;
                 for (let i = 1; i <= totalQuestions; i++) {
-                    if (LONG_ANSWER_RG[i].includes(responses[i])) {
+                    if (responses[i] === LONG_ANSWER_RG[i]) {
                         score += 1;
                     } else if (responses[i] === LONG_ANSWER[i]) {
                         score += 0;
-                    } else if (LONG_ANSWER_RG[i] !== "-") {
-                        score += 0.8;
                     } else if (LONG_ANSWER_RG[i].includes(",")) {
                         let rg = LONG_ANSWER_RG[i].split(",");
-                        if (rg[0] === responses[i]) {
+                        if (responses[i].startsWith(rg[0])) {
                             score += 1;
                             deu += 1;
-                        } else if (rg[1] === responses[i]) {
+                        } else if (responses[i].endsWith(rg[1])) {
                             score += 1;
                             pro += 1;
+                        } else {
+                            score += 0.9;
                         }
+                    } else if (LONG_ANSWER_RG[i] !== "-") {
+                        score += 0.9;
                     } else {
                         score += 1;
                     }
